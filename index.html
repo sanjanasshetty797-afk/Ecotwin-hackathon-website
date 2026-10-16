@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" href="data:,">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EcoTwin | Smart Waste Management</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #f5f7f2;
+      --surface: #ffffff;
+      --surface-soft: #f0f5ed;
+      --ink: #17271f;
+      --muted: #77847b;
+      --line: #e5ebe3;
+      --green: #287b52;
+      --green-dark: #185d3b;
+      --lime: #c8ee7b;
+      --orange: #f2a65a;
+      --blue: #6da8d8;
+      --red: #e77f73;
+      --shadow: 0 12px 32px rgba(28, 55, 38, .06);
+      --radius: 20px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font-family: "DM Sans", sans-serif; }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .app { min-height: 100vh; display: grid; grid-template-columns: 245px minmax(0,1fr); }
+    .sidebar { background: #173d2b; color: #eaf5ec; padding: 26px 17px; display: flex; flex-direction: column; gap: 30px; }
+    .brand { display: flex; gap: 11px; align-items: center; padding: 0 10px; }
+    .brand-mark { width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; background: var(--lime); color: #1a4c32; font-size: 22px; }
+    .brand-name { font: 800 20px Manrope, sans-serif; letter-spacing: -.6px; }
+    .brand-sub { color: #a8c6b1; font-size: 11px; margin-top: 2px; }
+    .nav-label { color: #8fb19b; text-transform: uppercase; letter-spacing: 1.5px; font-size: 10px; font-weight: 700; padding: 0 13px; margin-bottom: 8px; }
+    .nav { display: grid; gap: 6px; }
+    .nav button { border: 0; color: #bcd3c2; background: transparent; border-radius: 12px; padding: 12px 13px; text-align: left; display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 13px; }
+    .nav button .icon { width: 21px; text-align: center; font-size: 16px; }
+    .nav button.active, .nav button:hover { background: #2c5b40; color: white; }
+    .nav button.active { box-shadow: inset 3px 0 var(--lime); }
+    .sidebar-bottom { margin-top: auto; }
+    .pilot-card { background: #214c35; border: 1px solid #396448; border-radius: 16px; padding: 15px; }
+    .pilot-card .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--lime); margin-right: 6px; }
+    .pilot-card strong { font-size: 12px; }
+    .pilot-card p { color: #b4cdbb; font-size: 11px; line-height: 1.5; margin: 8px 0 0; }
+    main { min-width: 0; padding: 28px 32px 40px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin-bottom: 27px; }
+    .eyebrow { font-size: 11px; font-weight: 800; letter-spacing: 1.6px; color: var(--green); text-transform: uppercase; }
+    h1 { font: 800 clamp(25px, 3vw, 34px) Manrope, sans-serif; letter-spacing: -1.2px; margin: 6px 0 5px; }
+    .subhead { color: var(--muted); font-size: 13px; }
+    .top-actions { display: flex; align-items: center; gap: 10px; }
+    .date-pill, .user-pill { border: 1px solid var(--line); background: white; border-radius: 13px; padding: 10px 13px; font-size: 12px; color: #536157; white-space: nowrap; }
+    .user-pill { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+    .avatar { width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; background: #dcefc8; color: #2d6544; }
+    .hero { background: #dff0d4; border-radius: 24px; padding: 25px 27px; display: grid; grid-template-columns: minmax(0,1.4fr) minmax(180px,.6fr); gap: 20px; align-items: center; position: relative; overflow: hidden; margin-bottom: 20px; }
+    .hero:after { content: ""; position: absolute; width: 260px; height: 260px; right: 10%; top: -155px; border: 1px solid rgba(40,123,82,.12); border-radius: 50%; box-shadow: 0 0 0 25px rgba(40,123,82,.035), 0 0 0 50px rgba(40,123,82,.025); }
+    .hero h2 { font: 800 22px Manrope, sans-serif; margin: 0 0 8px; letter-spacing: -.5px; position: relative; z-index: 1; }
+    .hero p { color: #55725c; font-size: 13px; line-height: 1.6; margin: 0; max-width: 600px; position: relative; z-index: 1; }
+    .hero-cta { margin-top: 17px; display: flex; flex-wrap: wrap; gap: 9px; position: relative; z-index: 1; }
+    .btn { border: 0; border-radius: 11px; padding: 11px 15px; font-size: 12px; font-weight: 700; transition: transform .15s, opacity .15s; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { background: var(--green-dark); color: white; }
+    .btn-light { background: rgba(255,255,255,.8); color: #28543a; border: 1px solid rgba(40,123,82,.12); }
+    .hero-visual { justify-self: center; width: 160px; height: 130px; display: grid; place-items: center; position: relative; z-index: 1; }
+    .hero-visual .globe { font-size: 82px; filter: drop-shadow(0 10px 6px rgba(37,88,51,.12)); }
+    .float-chip { position: absolute; background: white; border-radius: 11px; padding: 8px 10px; font-size: 10px; font-weight: 800; box-shadow: var(--shadow); }
+    .chip-one { top: 4px; right: -4px; color: var(--green); }
+    .chip-two { bottom: 0; left: -10px; color: #9b6a29; }
+    .section-heading { display: flex; justify-content: space-between; align-items: center; margin: 24px 0 13px; gap: 12px; }
+    .section-heading h2 { font: 800 16px Manrope, sans-serif; margin: 0; letter-spacing: -.3px; }
+    .section-heading span { color: var(--muted); font-size: 11px; }
+    .metrics { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 13px; }
+    .metric { background: var(--surface); border: 1px solid var(--line); border-radius: 17px; padding: 17px; min-width: 0; box-shadow: 0 3px 14px rgba(28,55,38,.02); }
+    .metric-top { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+    .metric-label { color: var(--muted); font-size: 11px; font-weight: 600; }
+    .metric-icon { width: 33px; height: 33px; display: grid; place-items: center; border-radius: 11px; background: var(--surface-soft); font-size: 16px; }
+    .metric-value { font: 800 27px Manrope, sans-serif; margin-top: 12px; letter-spacing: -1px; }
+    .metric-foot { font-size: 10px; color: var(--muted); margin-top: 5px; }
+    .positive { color: var(--green); font-weight: 800; }
+    .dashboard-grid { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(290px,.8fr); gap: 16px; margin-top: 17px; }
+    .panel { background: white; border: 1px solid var(--line); border-radius: var(--radius); padding: 19px; min-width: 0; box-shadow: 0 3px 14px rgba(28,55,38,.02); }
+    .panel-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 15px; }
+    .panel-head h3 { font: 800 14px Manrope, sans-serif; margin: 0 0 5px; }
+    .panel-head p { font-size: 11px; color: var(--muted); margin: 0; }
+    .mini-tag { border-radius: 8px; background: #eff7e8; color: #34704a; font-size: 10px; font-weight: 800; padding: 7px 9px; white-space: nowrap; }
+    .chart-wrap { height: 220px; position: relative; }
+    .twin-map { background: #eef5e9; border-radius: 15px; height: 220px; position: relative; overflow: hidden; padding: 16px; }
+    .map-grid { position: absolute; inset: 0; opacity: .55; background-image: linear-gradient(#d5e4d0 1px, transparent 1px), linear-gradient(90deg,#d5e4d0 1px,transparent 1px); background-size: 27px 27px; }
+    .road { position: absolute; background: #fff; border: 1px solid #dce8d7; border-radius: 20px; }
+    .road.r1 { width: 120%; height: 22px; top: 48%; left: -10%; transform: rotate(-20deg); }
+    .road.r2 { width: 22px; height: 130%; top: -15%; left: 55%; transform: rotate(18deg); }
+    .road.r3 { width: 80%; height: 15px; top: 23%; left: 13%; transform: rotate(27deg); }
+    .zone { position: absolute; border-radius: 12px; background: rgba(160,205,135,.26); border: 1px solid rgba(88,151,85,.2); }
+    .zone.z1 { width: 75px; height: 46px; top: 20px; left: 25px; }
+    .zone.z2 { width: 65px; height: 50px; bottom: 22px; right: 25px; }
+    .bin { position: absolute; width: 32px; height: 32px; border-radius: 10px; border: 2px solid white; display: grid; place-items: center; font-size: 14px; box-shadow: 0 4px 10px #3e5f3920; z-index: 2; }
+    .bin.green { background: #6eb67a; top: 38px; left: 43%; }
+    .bin.orange { background: #f0b36a; top: 65%; left: 23%; }
+    .bin.blue { background: #75b0d9; top: 26%; right: 18%; }
+    .bin.red { background: #e8887b; bottom: 18px; left: 58%; }
+    .map-label { position: absolute; z-index: 3; background: white; padding: 5px 7px; border-radius: 7px; font-size: 9px; font-weight: 800; color: #536a58; box-shadow: 0 3px 10px #304a3010; }
+    .map-label.l1 { top: 10px; right: 10px; }
+    .map-label.l2 { bottom: 10px; left: 10px; }
+    .map-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+    .legend-item { font-size: 10px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+    .legend-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .lower-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; margin-top: 16px; }
+    .waste-list { display: grid; gap: 13px; }
+    .waste-row { display: grid; grid-template-columns: 34px minmax(0,1fr) auto; gap: 10px; align-items: center; }
+    .waste-icon { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; background: var(--surface-soft); font-size: 16px; }
+    .waste-name { font-size: 12px; font-weight: 800; }
+    .waste-sub { color: var(--muted); font-size: 10px; margin-top: 3px; }
+    .waste-amount { font-size: 12px; font-weight: 800; }
+    .bar { height: 5px; border-radius: 10px; background: #edf1eb; overflow: hidden; margin-top: 7px; }
+    .bar span { display: block; height: 100%; border-radius: 10px; }
+    .ai-panel { background: #173d2b; color: white; border: 0; }
+    .ai-panel .panel-head p { color: #a9c6b2; }
+    .ai-badge { width: 35px; height: 35px; border-radius: 12px; display: grid; place-items: center; background: #2b6040; font-size: 18px; }
+    .recommendation { border: 1px solid #3b6549; background: #204a33; border-radius: 13px; padding: 12px; margin-top: 10px; }
+    .recommendation-top { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 800; }
+    .priority { font-size: 9px; text-transform: uppercase; letter-spacing: .8px; border-radius: 6px; padding: 4px 6px; background: #f8dba5; color: #6e4a12; margin-left: auto; }
+    .recommendation p { font-size: 11px; color: #c3d8c8; line-height: 1.55; margin: 8px 0 0; }
+    .ai-actions { display: flex; gap: 8px; margin-top: 13px; }
+    .ai-actions .btn { flex: 1; }
+    .activity-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .activity-table th { text-align: left; color: #8a968c; font-weight: 700; font-size: 9px; letter-spacing: .8px; text-transform: uppercase; padding: 10px 8px; border-bottom: 1px solid var(--line); }
+    .activity-table td { padding: 12px 8px; border-bottom: 1px solid #f0f3ef; color: #526057; }
+    .activity-table tr:last-child td { border-bottom: 0; }
+    .status { border-radius: 7px; padding: 5px 7px; font-size: 9px; font-weight: 800; white-space: nowrap; }
+    .status.good { background: #e6f5e7; color: #337b45; }
+    .status.warn { background: #fff1d9; color: #a36a1d; }
+    .status.bad { background: #fde8e5; color: #b85a4e; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .toast { position: fixed; bottom: 24px; right: 24px; background: #173d2b; color: white; border-radius: 13px; padding: 13px 17px; font-size: 12px; box-shadow: var(--shadow); transform: translateY(120px); opacity: 0; transition: .3s; z-index: 20; max-width: 320px; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .upload-box { border: 1.5px dashed #cbdac9; border-radius: 16px; padding: 30px; text-align: center; background: #f8fbf6; }
+    .upload-box input { display: none; }
+    .upload-icon { font-size: 35px; margin-bottom: 10px; }
+    .upload-box h3 { margin: 0 0 7px; font: 800 16px Manrope; }
+    .upload-box p { margin: 0 auto 16px; max-width: 420px; font-size: 12px; line-height: 1.6; color: var(--muted); }
+    .preview { max-width: 100%; max-height: 280px; border-radius: 14px; margin-top: 18px; display: none; }
+    .classification-result { display: none; margin-top: 16px; background: white; border: 1px solid var(--line); padding: 16px; border-radius: 14px; }
+    .result-chip { display: inline-block; border-radius: 8px; padding: 7px 10px; background: #e5f5e6; color: #267144; font-weight: 800; font-size: 12px; }
+    .settings-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
+    .setting-card { background: white; border: 1px solid var(--line); padding: 18px; border-radius: 16px; }
+    .setting-card h3 { font: 800 14px Manrope; margin: 0 0 8px; }
+    .setting-card p { color: var(--muted); font-size: 12px; line-height: 1.6; }
+    footer { margin-top: 25px; color: #9aa59b; font-size: 10px; text-align: center; }
+    @media (max-width: 1100px) { .app { grid-template-columns: 210px minmax(0,1fr); } main { padding: 24px 20px; } .metrics { grid-template-columns: repeat(2,minmax(0,1fr)); } .dashboard-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 720px) { .app { display: block; } .sidebar { padding: 13px; gap: 14px; } .brand { padding: 0 5px; } .nav-label, .sidebar-bottom { display: none; } .nav { display: flex; overflow-x: auto; } .nav button { flex: 0 0 auto; padding: 10px; } .nav button .label { display: none; } main { padding: 19px 13px 30px; } .topbar { align-items: flex-start; flex-direction: column; } .top-actions { width: 100%; } .hero { grid-template-columns: 1fr; padding: 21px; } .hero-visual { display: none; } .metrics { gap: 9px; } .metric { padding: 13px; } .metric-value { font-size: 23px; } .lower-grid, .settings-grid { grid-template-columns: 1fr; } .activity-table { min-width: 520px; } .table-scroll { overflow-x: auto; } }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">♻</div>
+      <div><div class="brand-name">EcoTwin</div><div class="brand-sub">SMART WASTE INTELLIGENCE</div></div>
+    </div>
+    <div>
+      <div class="nav-label">Workspace</div>
+      <nav class="nav">
+        <button class="active" data-page="overview"><span class="icon">◫</span><span class="label">Overview</span></button>
+        <button data-page="vision"><span class="icon">◎</span><span class="label">AI Waste Scanner</span></button>
+        <button data-page="twin"><span class="icon">⌘</span><span class="label">Digital Twin</span></button>
+        <button data-page="insights"><span class="icon">✧</span><span class="label">GenAI Insights</span></button>
+        <button data-page="operations"><span class="icon">↗</span><span class="label">Collection Routes</span></button>
+      </nav>
+    </div>
+    <div>
+      <div class="nav-label">Manage</div>
+      <nav class="nav">
+        <button data-page="settings"><span class="icon">⚙</span><span class="label">System Settings</span></button>
+      </nav>
+    </div>
+    <div class="sidebar-bottom">
+      <div class="pilot-card"><div><span class="dot"></span><strong>Demo environment</strong></div><p>Sample data is being used for this hackathon prototype. Connect real sensors and AI models for live insights.</p></div>
+    </div>
+  </aside>
+
+  <main>
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">City operations / Command centre</div>
+        <h1 id="pageTitle">Waste intelligence overview</h1>
+        <div class="subhead" id="pageSubtitle">A living picture of your city's waste ecosystem.</div>
+      </div>
+      <div id="ecoTwinLoginPanel" style="
+    background:white;
+    border:1px solid #e5ebe3;
+    border-radius:13px;
+    padding:12px;
+    margin-right:10px;
+">
+    <div style="font-size:12px;font-weight:700;margin-bottom:8px;">
+        Backend Login
+    </div>
+
+    <form id="ecoTwinLoginForm" style="display:flex;gap:6px;flex-wrap:wrap;">
+        <input
+            id="ecoTwinUsername"
+            type="text"
+            placeholder="Username"
+            autocomplete="username"
+            required
+            style="width:100px;padding:8px;border:1px solid #e5ebe3;border-radius:8px;"
+        >
+
+        <input
+            id="ecoTwinPassword"
+            type="password"
+            placeholder="Password"
+            autocomplete="current-password"
+            required
+            style="width:100px;padding:8px;border:1px solid #e5ebe3;border-radius:8px;"
+        >
+
+        <button class="btn btn-primary" type="submit">
+            Connect
+        </button>
+    </form>
+
+    <div id="ecoTwinConnectionStatus"
+         style="font-size:10px;margin-top:7px;color:#77847b;">
+        Not connected
+    </div>
+</div>
+      <div class="top-actions">
+        <div class="date-pill" id="todayDate">◷ Today</div>
+        <div class="user-pill"><div class="avatar">EC</div> Eco City Admin</div>
+      </div>
+    </header>
+
+    <section class="page active" id="page-overview">
+      <div class="hero">
+        <div>
+          <div class="eyebrow">♻ A cleaner city starts with better data</div>
+          <h2>See waste differently.<br>Make every collection count.</h2>
+          <p>EcoTwin brings computer vision, a digital twin of city waste operations, and Generative AI recommendations into one intelligent workspace.</p>
+          <div class="hero-cta">
+            <button class="btn btn-primary" onclick="navigate('vision')">＋ Scan waste sample</button>
+            <button class="btn btn-light" onclick="navigate('twin')">Explore digital twin ↗</button>
+          </div>
+        </div>
+        <div class="hero-visual"><div class="globe">🌍</div><div class="float-chip chip-one">LIVE TWIN · DEMO</div><div class="float-chip chip-two">↓ 18% missed pickups</div></div>
+      </div>
+
+      <div class="section-heading"><h2>City at a glance</h2><span>Illustrative demo metrics · refreshed just now</span></div>
+      <div class="metrics">
+        <div class="metric"><div class="metric-top"><span class="metric-label">Waste processed today</span><span class="metric-icon">♻️</span></div><div class="metric-value">12.8 <small style="font-size:13px">tons</small></div><div class="metric-foot"><span class="positive">↑ 8.4%</span> vs. yesterday</div></div>
+        <div class="metric"><div class="metric-top"><span class="metric-label">Segregation accuracy</span><span class="metric-icon">◎</span></div><div class="metric-value">91.6%</div><div class="metric-foot"><span class="positive">↑ 4.2%</span> this week</div></div>
+        <div class="metric"><div class="metric-top"><span class="metric-label">Bins needing pickup</span><span class="metric-icon">🗑️</span></div><div class="metric-value">18 <small style="font-size:13px">bins</small></div><div class="metric-foot">6 high priority · 12 scheduled</div></div>
+        <div class="metric"><div class="metric-top"><span class="metric-label">Collection efficiency</span><span class="metric-icon">🚛</span></div><div class="metric-value">84.3%</div><div class="metric-foot"><span class="positive">↑ 6.1%</span> after route changes</div></div>
+      </div>
+
+      <div class="dashboard-grid">
+        <article class="panel">
+          <div class="panel-head"><div><h3>Waste stream analysis</h3><p>Daily collected volume by material type</p></div><span class="mini-tag">This week</span></div>
+          <div class="chart-wrap"><canvas id="wasteChart"></canvas></div>
+        </article>
+        <article class="panel">
+          <div class="panel-head"><div><h3>Digital twin · city zones</h3><p>Simulated bin status and collection hotspots</p></div><span class="mini-tag">● Model synced</span></div>
+          <div class="twin-map">
+            <div class="map-grid"></div><div class="road r1"></div><div class="road r2"></div><div class="road r3"></div><div class="zone z1"></div><div class="zone z2"></div>
+            <div class="bin green" title="Organic bin: normal">🍃</div><div class="bin orange" title="Mixed waste: nearly full">♻</div><div class="bin blue" title="Recyclables: normal">📦</div><div class="bin red" title="Overflow risk">!</div>
+            <div class="map-label l1">NORTH ZONE</div><div class="map-label l2">SOUTH ZONE</div>
+          </div>
+          <div class="map-legend"><span class="legend-item"><span class="legend-dot" style="background:#6eb67a"></span>Normal</span><span class="legend-item"><span class="legend-dot" style="background:#f0b36a"></span>Nearly full</span><span class="legend-item"><span class="legend-dot" style="background:#e8887b"></span>Pickup urgent</span></div>
+        </article>
+      </div>
+
+      <div class="lower-grid">
+        <article class="panel">
+          <div class="panel-head"><div><h3>Material recovery snapshot</h3><p>Estimated composition of today's waste</p></div><span class="mini-tag">12.8 tons</span></div>
+          <div class="waste-list">
+            <div class="waste-row"><div class="waste-icon">🍃</div><div><div class="waste-name">Organic waste</div><div class="waste-sub">Composting potential</div><div class="bar"><span style="width:72%;background:#71b77d"></span></div></div><div class="waste-amount">4.6 t</div></div>
+            <div class="waste-row"><div class="waste-icon">📦</div><div><div class="waste-name">Paper & cardboard</div><div class="waste-sub">Recyclable material</div><div class="bar"><span style="width:49%;background:#7db8df"></span></div></div><div class="waste-amount">2.9 t</div></div>
+            <div class="waste-row"><div class="waste-icon">🥤</div><div><div class="waste-name">Plastic</div><div class="waste-sub">Needs cleaner segregation</div><div class="bar"><span style="width:41%;background:#f0b36a"></span></div></div><div class="waste-amount">2.2 t</div></div>
+            <div class="waste-row"><div class="waste-icon">🍾</div><div><div class="waste-name">Glass & metal</div><div class="waste-sub">High recovery value</div><div class="bar"><span style="width:26%;background:#9b9de0"></span></div></div><div class="waste-amount">1.4 t</div></div>
+          </div>
+        </article>
+        <article class="panel ai-panel">
+          <div class="panel-head"><div><h3>✧ GenAI operations advisor</h3><p>Suggested actions from simulated city signals</p></div><div class="ai-badge">✧</div></div>
+          <div class="recommendation"><div class="recommendation-top">Prioritise Market Street pickup <span class="priority">High</span></div><p>Two bins are nearing capacity. Add this stop to the next collection route to reduce overflow risk.</p></div>
+          <div class="recommendation"><div class="recommendation-top">Improve plastic segregation <span class="priority" style="background:#d6e9fa;color:#2e628d">Medium</span></div><p>Plastic contamination is above the target in Zone 3. Try clearer bin labels and a short awareness prompt.</p></div>
+          <div class="ai-actions"><button class="btn btn-light" onclick="navigate('insights')">View all insights ↗</button><button class="btn btn-primary" onclick="showToast('Demo action: route optimisation marked for review.')">Apply suggestion</button></div>
+        </article>
+      </div>
+      <div class="section-heading"><h2>Recent system activity</h2><span>Latest simulated events</span></div>
+      <article class="panel table-scroll">
+        <table class="activity-table"><thead><tr><th>Event</th><th>Zone</th><th>Time</th><th>System status</th></tr></thead><tbody>
+          <tr><td>Plastic bottle detected</td><td>Zone 2 · Riverside</td><td>10:42 AM</td><td><span class="status good">Classified</span></td></tr>
+          <tr><td>Bin capacity threshold reached</td><td>Zone 1 · Market Street</td><td>10:28 AM</td><td><span class="status warn">Pickup advised</span></td></tr>
+          <tr><td>Collection route optimised</td><td>Zone 4 · Green Park</td><td>09:56 AM</td><td><span class="status good">Suggested</span></td></tr>
+          <tr><td>Mixed waste contamination</td><td>Zone 3 · Central</td><td>09:41 AM</td><td><span class="status bad">Needs review</span></td></tr>
+        </tbody></table>
+      </article>
+    </section>
+
+    <section class="page" id="page-vision">
+      <div class="section-heading"><h2>AI waste scanner</h2><span>Prototype · simulated classification</span></div>
+      <article class="panel">
+        <div class="upload-box">
+          <div class="upload-icon">📷</div><h3>Upload a waste image</h3>
+          <p>Choose a photo of one waste item. This prototype previews the image and simulates a result so you can demonstrate the workflow before connecting a trained computer-vision model.</p>
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+  <!-- Select an existing image -->
+  <label for="wasteFile" class="btn btn-primary">
+    📁 Choose Image
+  </label>
+
+  <!-- Capture a new photo using the camera -->
+  <label for="cameraFile" class="btn btn-light">
+    📷 Take Photo
+  </label>
+</div>
+
+<input
+  type="file"
+  id="wasteFile"
+  accept="image/*"
+  style="display:none;"
+>
+
+<input
+  type="file"
+  id="cameraFile"
+  accept="image/*"
+  capture="environment"
+  style="display:none;"
+>
+          <div><img id="preview" class="preview" alt="Selected waste preview"></div>
+          <div id="classResult" class="classification-result"></div>
+        </div>
+      </article>
+      <div class="lower-grid">
+        <article class="panel"><div class="panel-head"><div><h3>Classification pipeline</h3><p>How the final model should work</p></div></div>
+          <div class="waste-list">
+            <div class="waste-row"><div class="waste-icon">1</div><div><div class="waste-name">Image input</div><div class="waste-sub">Camera or uploaded image</div></div><span class="status good">Ready</span></div>
+            <div class="waste-row"><div class="waste-icon">2</div><div><div class="waste-name">Computer vision model</div><div class="waste-sub">Detect object and predict material class</div></div><span class="status warn">Connect model</span></div>
+            <div class="waste-row"><div class="waste-icon">3</div><div><div class="waste-name">Segregation guidance</div><div class="waste-sub">Recommend the correct bin and handling</div></div><span class="status warn">Demo rule</span></div>
+          </div>
+        </article>
+        <article class="panel"><div class="panel-head"><div><h3>Supported demo categories</h3><p>Replace with your model's labels</p></div></div>
+          <div class="waste-list">
+            <div class="waste-row"><div class="waste-icon">🍃</div><div><div class="waste-name">Organic</div><div class="waste-sub">Food scraps, leaves</div></div><span class="status good">Green bin</span></div>
+            <div class="waste-row"><div class="waste-icon">📦</div><div><div class="waste-name">Paper</div><div class="waste-sub">Clean paper, cardboard</div></div><span class="status good">Blue bin</span></div>
+            <div class="waste-row"><div class="waste-icon">🥤</div><div><div class="waste-name">Plastic</div><div class="waste-sub">Bottles, clean packaging</div></div><span class="status warn">Check local rules</span></div>
+            <div class="waste-row"><div class="waste-icon">🔋</div><div><div class="waste-name">E-waste / hazardous</div><div class="waste-sub">Batteries, electronics</div></div><span class="status bad">Special collection</span></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="page" id="page-twin">
+      <div class="section-heading"><h2>Digital twin explorer</h2><span>Illustrative city model · not live GIS</span></div>
+      <div class="dashboard-grid">
+        <article class="panel"><div class="panel-head"><div><h3>City collection network</h3><p>Example virtual representation of bins and zones</p></div><span class="mini-tag">4 zones · 24 bins</span></div>
+          <div class="twin-map" style="height:330px"><div class="map-grid"></div><div class="road r1"></div><div class="road r2"></div><div class="road r3"></div><div class="zone z1"></div><div class="zone z2"></div>
+            <div class="bin green" style="top:18%;left:30%">🍃</div><div class="bin orange" style="top:58%;left:20%">♻</div><div class="bin blue" style="top:29%;right:20%">📦</div><div class="bin red" style="bottom:14%;left:58%">!</div><div class="bin green" style="top:60%;right:24%">🍃</div><div class="bin blue" style="top:12%;right:43%">📦</div>
+            <div class="map-label l1">ZONE 1 · MARKET</div><div class="map-label l2">ZONE 3 · CENTRAL</div>
+          </div>
+          <div class="map-legend"><span class="legend-item"><span class="legend-dot" style="background:#6eb67a"></span>Normal capacity</span><span class="legend-item"><span class="legend-dot" style="background:#f0b36a"></span>70–90% full</span><span class="legend-item"><span class="legend-dot" style="background:#e8887b"></span>Urgent pickup</span></div>
+        </article>
+        <article class="panel"><div class="panel-head"><div><h3>Selected asset</h3><p>Click a bin marker in the final implementation to inspect</p></div><span class="mini-tag">BIN-014</span></div>
+          <div class="metric" style="background:#f8fbf6"><div class="metric-top"><span class="metric-label">Fill level</span><span class="metric-icon">🗑️</span></div><div class="metric-value">87%</div><div class="bar" style="height:8px"><span style="width:87%;background:#e8887b"></span></div><div class="metric-foot">Estimated capacity · simulated telemetry</div></div>
+          <div class="waste-list" style="margin-top:16px"><div class="waste-row"><div class="waste-icon">📍</div><div><div class="waste-name">Location</div><div class="waste-sub">Market Street, Zone 1</div></div></div><div class="waste-row"><div class="waste-icon">♻️</div><div><div class="waste-name">Waste type</div><div class="waste-sub">Mixed recyclables</div></div></div><div class="waste-row"><div class="waste-icon">⏱</div><div><div class="waste-name">Suggested pickup</div><div class="waste-sub">Within next collection cycle</div></div></div></div>
+          <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="showToast('Demo: BIN-014 added to the priority pickup list.')">Add to priority pickup</button>
+        </article>
+      </div>
+      <article class="panel" style="margin-top:16px"><div class="panel-head"><div><h3>What makes this a digital twin?</h3><p>Connect real-world data to the virtual model</p></div></div><div class="settings-grid"><div class="setting-card"><h3>Real-world inputs</h3><p>Bin fill sensors, GPS locations, vehicle position, collection records, and computer-vision classification results.</p></div><div class="setting-card"><h3>Virtual state</h3><p>Each bin, vehicle, route, and zone has a digital record that updates when new events arrive.</p></div><div class="setting-card"><h3>Simulation</h3><p>Test “what if” scenarios such as adding a truck, changing a pickup schedule, or moving a collection point.</p></div><div class="setting-card"><h3>Feedback loop</h3><p>Compare predicted outcomes with actual collection data and improve route and segregation recommendations.</p></div></div></article>
+    </section>
+
+    <section class="page" id="page-insights">
+      <div class="section-heading"><h2>GenAI insights</h2><span>Sample recommendations · generated demo content</span></div>
+      <article class="panel ai-panel">
+        <div class="panel-head"><div><h3>Ask the EcoTwin advisor</h3><p>Explore the type of operational questions your GenAI layer could answer.</p></div><div class="ai-badge">✧</div></div>
+        <div style="display:flex;gap:9px;flex-wrap:wrap;margin:15px 0"><button class="btn btn-light" onclick="askAI('How can we reduce overflow in Zone 1?')">Reduce overflow</button><button class="btn btn-light" onclick="askAI('How can we improve recycling quality?')">Improve recycling</button><button class="btn btn-light" onclick="askAI('How should we optimise collection routes?')">Optimise routes</button></div>
+        <div style="display:flex;gap:9px;flex-wrap:wrap"><input id="aiQuestion" placeholder="Ask about waste, bins, routes or recycling…" style="flex:1;min-width:190px;border:1px solid #456b50;background:#214a33;color:white;border-radius:11px;padding:12px;outline:none"><button class="btn btn-primary" onclick="submitAI()">Generate insight ↗</button></div>
+        <div id="aiAnswer" style="margin-top:15px;color:#c8ddce;font-size:12px;line-height:1.7">Your generated recommendation will appear here. This demo uses preset responses; connect an LLM API for real generative answers.</div>
+      </article>
+      <div class="section-heading"><h2>Recommended actions</h2><span>Ranked by estimated impact</span></div>
+      <div class="settings-grid">
+        <div class="setting-card"><div class="recommendation-top" style="color:#246b42">01 · Prevent overflow <span class="priority">High</span></div><h3 style="margin-top:13px">Prioritise bins above 80%</h3><p>Schedule high-fill bins before standard stops. Expected benefit: fewer missed pickups and cleaner public spaces.</p><button class="btn btn-light" onclick="showToast('Action saved to the demo review queue.')">Save action</button></div>
+        <div class="setting-card"><div class="recommendation-top" style="color:#246b42">02 · Improve recovery <span class="priority" style="background:#d6e9fa;color:#2e628d">Medium</span></div><h3 style="margin-top:13px">Target contamination hotspots</h3><p>Use classification trends to identify zones with mixed waste in recycling bins and deliver focused signage or awareness.</p><button class="btn btn-light" onclick="showToast('Action saved to the demo review queue.')">Save action</button></div>
+        <div class="setting-card"><div class="recommendation-top" style="color:#246b42">03 · Reduce travel <span class="priority" style="background:#d6e9fa;color:#2e628d">Medium</span></div><h3 style="margin-top:13px">Bundle nearby urgent stops</h3><p>Group urgent bins by location and vehicle capacity before dispatching a route. Validate suggestions against live traffic.</p><button class="btn btn-light" onclick="showToast('Action saved to the demo review queue.')">Save action</button></div>
+        <div class="setting-card"><div class="recommendation-top" style="color:#246b42">04 · Close the loop <span class="priority" style="background:#e6f5e7;color:#337b45">Ongoing</span></div><h3 style="margin-top:13px">Measure outcomes</h3><p>Compare recommendations with actual pickup time, overflow reports, recycling recovery, and kilometres travelled.</p><button class="btn btn-light" onclick="showToast('Action saved to the demo review queue.')">Save action</button></div>
+      </div>
+    </section>
+
+    <section class="page" id="page-operations">
+      <div class="section-heading"><h2>Collection routes</h2><span>Demo schedule · optimise with live data later</span></div>
+      <article class="panel table-scroll"><div class="panel-head"><div><h3>Today's collection plan</h3><p>Priority stops are suggested from simulated fill levels</p></div><button class="btn btn-primary" onclick="showToast('Demo route recalculated. Connect routing data for real optimisation.')">↻ Recalculate route</button></div>
+        <table class="activity-table"><thead><tr><th>Route</th><th>Zone</th><th>Stops</th><th>Estimated duration</th><th>Priority</th><th>Status</th></tr></thead><tbody>
+          <tr><td>RT-01</td><td>Market Street</td><td>8</td><td>42 min</td><td>High</td><td><span class="status warn">Next up</span></td></tr>
+          <tr><td>RT-02</td><td>Riverside</td><td>6</td><td>35 min</td><td>Medium</td><td><span class="status good">Scheduled</span></td></tr>
+          <tr><td>RT-03</td><td>Central Zone</td><td>7</td><td>48 min</td><td>High</td><td><span class="status bad">Review</span></td></tr>
+          <tr><td>RT-04</td><td>Green Park</td><td>5</td><td>27 min</td><td>Low</td><td><span class="status good">Scheduled</span></td></tr>
+        </tbody></table>
+      </article>
+      <div class="lower-grid"><article class="panel"><div class="panel-head"><div><h3>Route optimisation logic</h3><p>Suggested implementation plan</p></div></div><div class="waste-list"><div class="waste-row"><div class="waste-icon">1</div><div><div class="waste-name">Rank by urgency</div><div class="waste-sub">Fill level, time since pickup, overflow risk</div></div></div><div class="waste-row"><div class="waste-icon">2</div><div><div class="waste-name">Group nearby stops</div><div class="waste-sub">Coordinates and road distance</div></div></div><div class="waste-row"><div class="waste-icon">3</div><div><div class="waste-name">Respect truck capacity</div><div class="waste-sub">Waste volume, vehicle type and shift length</div></div></div></div></article><article class="panel"><div class="panel-head"><div><h3>Performance targets</h3><p>Example goals for a pilot</p></div></div><div class="waste-list"><div class="waste-row"><div class="waste-icon">🎯</div><div><div class="waste-name">Collection efficiency</div><div class="bar"><span style="width:84%;background:#71b77d"></span></div></div><div class="waste-amount">84%</div></div><div class="waste-row"><div class="waste-icon">🎯</div><div><div class="waste-name">On-time pickup</div><div class="bar"><span style="width:91%;background:#7db8df"></span></div></div><div class="waste-amount">91%</div></div><div class="waste-row"><div class="waste-icon">🎯</div><div><div class="waste-name">Recycling recovery</div><div class="bar"><span style="width:68%;background:#f0b36a"></span></div></div><div class="waste-amount">68%</div></div></div></article></div>
+    </section>
+
+    <section class="page" id="page-settings">
+      <div class="section-heading"><h2>System settings</h2><span>Prototype setup checklist</span></div>
+      <div class="settings-grid">
+        <div class="setting-card"><h3>🧠 Computer vision</h3><p>Model endpoint: <b>Not connected</b><br>Expected input: image file or camera frame<br>Expected output: class, confidence, bounding box (optional)</p><button class="btn btn-light" onclick="showToast('Add your model API endpoint in the JavaScript integration step.')">Integration notes</button></div>
+        <div class="setting-card"><h3>🌐 Digital twin data</h3><p>Data source: <b>Sample records</b><br>Recommended: bins, zones, vehicles, routes, fill-level timestamps.</p><button class="btn btn-light" onclick="showToast('Create a shared API schema before connecting the twin.')">Data schema notes</button></div>
+        <div class="setting-card"><h3>✨ Generative AI</h3><p>LLM endpoint: <b>Preset demo responses</b><br>Send structured metrics and request concise, explainable recommendations.</p><button class="btn btn-light" onclick="showToast('Keep API keys on a backend server, never in frontend JavaScript.')">Security note</button></div>
+        <div class="setting-card"><h3>🚚 Collection optimisation</h3><p>Routing: <b>Static demo routes</b><br>Connect a routing service and validate recommendations before dispatch.</p><button class="btn btn-light" onclick="showToast('Route optimisation currently uses example data only.')">View status</button></div>
+      </div>
+    </section>
+    <footer>ECOTWIN · HACKATHON FRONTEND PROTOTYPE · SAMPLE DATA IS ILLUSTRATIVE, NOT LIVE CITY DATA</footer>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+  const pageInfo = {
+    overview: ["Waste intelligence overview", "A living picture of your city's waste ecosystem."],
+    vision: ["AI waste scanner", "Classify waste and guide better segregation."],
+    twin: ["Digital twin explorer", "Explore a virtual model of bins, zones, and collection assets."],
+    insights: ["GenAI insights", "Turn waste operations data into clear, actionable recommendations."],
+    operations: ["Collection routes", "Prioritise pickups and plan more efficient collection."],
+    settings: ["System settings", "Integration checklist for the hackathon prototype."]
+  };
+  function navigate(page) {
+    document.querySelectorAll(".page").forEach(el => el.classList.remove("active"));
+    const target = document.getElementById("page-" + page);
+    if (target) target.classList.add("active");
+    document.querySelectorAll(".nav button").forEach(btn => btn.classList.toggle("active", btn.dataset.page === page));
+    document.getElementById("pageTitle").textContent = pageInfo[page][0];
+    document.getElementById("pageSubtitle").textContent = pageInfo[page][1];
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+  document.querySelectorAll(".nav button").forEach(btn => btn.addEventListener("click", () => navigate(btn.dataset.page)));
+  document.getElementById("todayDate").textContent = "◷ " + new Date().toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" });
+
+  function showToast(message) {
+    const toast = document.getElementById("toast");
+    toast.textContent = message;
+    toast.classList.add("show");
+    clearTimeout(window.toastTimer);
+    window.toastTimer = setTimeout(() => toast.classList.remove("show"), 3200);
+  }
+
+  const fileInput = document.getElementById("wasteFile");
+const cameraInput = document.getElementById("cameraFile");
+
+async function handleWasteImage(event) {
+    const file = event.target.files[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+        showToast("Please select an image file.");
+        return;
+    }
+
+    const preview = document.getElementById("preview");
+
+    if (preview.dataset.objectUrl) {
+        URL.revokeObjectURL(preview.dataset.objectUrl);
+    }
+
+    const imageUrl = URL.createObjectURL(file);
+    preview.dataset.objectUrl = imageUrl;
+    preview.src = imageUrl;
+    preview.style.display = "inline-block";
+
+    // Hide the previous result until the new image is processed.
+    document.getElementById("classResult").style.display = "none";
+
+    await classifyWasteWithBackend(file);
+}
+
+fileInput.addEventListener("change", handleWasteImage);
+cameraInput.addEventListener("change", handleWasteImage);
+// Open the laptop webcam when Take Photo is clicked
+const takePhotoButton = document.querySelector(
+    'label[for="cameraFile"]'
+);
+
+takePhotoButton.addEventListener("click", async (event) => {
+    event.preventDefault();
+
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false
+        });
+
+        const video = document.createElement("video");
+        video.autoplay = true;
+        video.playsInline = true;
+
+        video.style.width = "100%";
+        video.style.maxWidth = "400px";
+
+        video.srcObject = stream;
+
+        const container = document.getElementById("preview").parentElement;
+        container.prepend(video);
+
+        const captureButton = document.createElement("button");
+        captureButton.textContent = "Capture Photo";
+        captureButton.className = "btn btn-primary";
+        captureButton.type = "button";
+        container.prepend(captureButton);
+
+        captureButton.onclick = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            canvas.getContext("2d").drawImage(video, 0, 0);
+
+            canvas.toBlob(async (blob) => {
+                if (!blob) return;
+
+                const file = new File(
+                    [blob],
+                    "waste-photo.jpg",
+                    { type: "image/jpeg" }
+                );
+
+                stream.getTracks().forEach(track => track.stop());
+                video.remove();
+                captureButton.remove();
+
+                const preview = document.getElementById("preview");
+                if (preview.dataset.objectUrl) {
+                    URL.revokeObjectURL(preview.dataset.objectUrl);
+                }
+
+                preview.dataset.objectUrl = URL.createObjectURL(file);
+                preview.src = preview.dataset.objectUrl;
+                preview.style.display = "inline-block";
+
+                await classifyWasteWithBackend(file);
+            }, "image/jpeg");
+        };
+
+    } catch (error) {
+        console.error(error);
+        showToast("Camera unavailable. Check camera permissions or use HTTPS/localhost.");
+    }
+});
+  fileInput.addEventListener("change", async event => {
+    const file = event.target.files[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+        showToast("Please select an image file.");
+        return;
+    }
+
+    const preview = document.getElementById("preview");
+
+    if (preview.dataset.objectUrl) {
+        URL.revokeObjectURL(preview.dataset.objectUrl);
+    }
+
+    const imageUrl = URL.createObjectURL(file);
+    preview.dataset.objectUrl = imageUrl;
+    preview.src = imageUrl;
+    preview.style.display = "inline-block";
+
+    await classifyWasteWithBackend(file);
+});
+
+  function askAI(question) { document.getElementById("aiQuestion").value = question; submitAI(); }
+  function submitAI() {
+    const question = document.getElementById("aiQuestion").value.trim();
+    if (!question) { showToast("Type a question first."); return; }
+    const q = question.toLowerCase();
+    let answer;
+    if (q.includes("overflow") || q.includes("zone 1") || q.includes("full")) {
+      answer = "Recommended next step: prioritise bins above 80% capacity, starting with Market Street. Bundle nearby urgent stops into the next route and confirm vehicle capacity. Track overflow reports for the next 7 days to see whether the change helped.";
+    } else if (q.includes("recycl") || q.includes("plastic") || q.includes("segregat")) {
+      answer = "Recommended next step: identify zones with the highest contamination rate, then use clearer labels and short, local-language sorting instructions. Keep clean paper, plastic, glass and metal streams separate where local facilities accept them. Compare contamination before and after the intervention.";
+    } else if (q.includes("route") || q.includes("travel") || q.includes("collection")) {
+      answer = "Recommended next step: rank pickup stops by fill level and time since last collection, group nearby stops using road distance, and respect truck capacity and shift limits. Compare total kilometres, on-time pickups and missed collections against the current route.";
+    } else {
+      answer = "Based on the demo signals, start by checking high-fill bins and zones with repeated mixed-waste detections. Prioritise actions with measurable outcomes, assign an owner, and compare the next collection cycle with the baseline. This is a preset prototype response; connect a language model to generate answers from live data.";
+    }
+    document.getElementById("aiAnswer").innerHTML = `<b style="color:#e0f2c9">Suggested action</b><br>${answer}<br><br><span style="font-size:10px;color:#8fb19b">Demo response · validate recommendations with local waste rules and real operational data.</span>`;
+  }
+
+  const chartCanvas = document.getElementById("wasteChart");
+  if (chartCanvas && window.Chart) {
+    new Chart(chartCanvas, {
+      type: "bar",
+      data: {
+        labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+        datasets: [
+          { label: "Organic", data: [4.1, 4.5, 4.2, 4.8, 4.6, 5.1, 4.6], backgroundColor: "#79b982", borderRadius: 5, barPercentage: .68 },
+          { label: "Recyclables", data: [2.8, 3.1, 2.7, 3.4, 3.2, 3.6, 3.5], backgroundColor: "#8dbfe0", borderRadius: 5, barPercentage: .68 },
+          { label: "Mixed", data: [2.3, 2.1, 2.4, 2.2, 2.5, 2.3, 2.1], backgroundColor: "#f1bd78", borderRadius: 5, barPercentage: .68 }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 7, boxHeight: 7, padding: 18, font: { family: "DM Sans", size: 10 } } }, tooltip: { mode: "index", intersect: false } },
+        scales: {
+          x: { grid: { display: false }, border: { display: false }, ticks: { color: "#879389", font: { family: "DM Sans", size: 10 } } },
+          y: { beginAtZero: true, grid: { color: "#edf1eb" }, border: { display: false }, ticks: { color: "#879389", font: { family: "DM Sans", size: 10 }, callback: value => value + " t" } }
+        }
+      }
+    });
+  }
+</script>
+<script>
+/* ==========================================
+   ECOTWIN - FASTAPI BACKEND INTEGRATION
+   ========================================== */
+
+const API_BASE = "http://127.0.0.1:8000";
+
+// Save the token after logging in.
+let ecoTwinToken = sessionStorage.getItem("ecotwin_token") || "";
+
+// Reusable API request function.
+async function apiRequest(endpoint, options = {}) {
+    const headers = new Headers(options.headers || {});
+
+    if (ecoTwinToken) {
+        headers.set("Authorization", `Bearer ${ecoTwinToken}`);
+    }
+
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+        ...options,
+        headers
+    });
+
+    if (!response.ok) {
+        const message = await response.text();
+        throw new Error(`API ${response.status}: ${message}`);
+    }
+
+    if (response.status === 204) return null;
+
+    return response.json();
+}
+
+// Login using the username and password created in your backend.
+async function ecoTwinLogin(username, password) {
+    const form = new URLSearchParams();
+    form.append("username", username);
+    form.append("password", password);
+    form.append("grant_type", "password");
+
+    const response = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept": "application/json"
+        },
+        body: form
+    });
+
+    if (!response.ok) {
+        throw new Error("Login failed. Check your username and password.");
+    }
+
+    const data = await response.json();
+
+    ecoTwinToken = data.access_token;
+    sessionStorage.setItem("ecotwin_token", ecoTwinToken);
+
+    showToast("Connected to EcoTwin backend!");
+    await loadEcoTwinData();
+    return data;
+}
+
+// Load actual Digital Twin data.
+async function loadEcoTwinData() {
+    if (!ecoTwinToken) {
+        console.log("Please log in to load live backend data.");
+        return;
+    }
+
+    try {
+        const data = await apiRequest("/twin");
+
+        console.log("Live Digital Twin data:", data);
+
+        updateEcoTwinDashboard(data);
+
+        showToast("Live dashboard data loaded successfully!");
+
+    } catch (error) {
+        console.error("Failed to load Digital Twin data:", error);
+        showToast("Could not load live data. Check the backend.");
+    }
+}
+
+// Update the dashboard metrics and zones from the backend.
+function updateEcoTwinDashboard(data) {
+    const kpis = data.kpis || {};
+
+    // Update the first metric to show total bins.
+    const metricCards = document.querySelectorAll("#page-overview .metrics .metric");
+
+    if (metricCards.length >= 4) {
+        setMetric(
+            metricCards[0],
+            "Total bins",
+            kpis.total_bins ?? 0,
+            "🗑️",
+            "Loaded from Digital Twin API"
+        );
+
+        setMetric(
+            metricCards[2],
+            "Critical bins",
+            kpis.critical_bins ?? 0,
+            "🚨",
+            "Bins requiring urgent attention"
+        );
+
+        setMetric(
+            metricCards[1],
+            "Average bin fill",
+            `${Math.round(kpis.avg_fill ?? 0)}%`,
+            "📊",
+            "Average reported fill level"
+        );
+
+        // The backend does not necessarily provide this metric.
+        // Keep the card honest rather than inventing live data.
+        setMetric(
+            metricCards[3],
+            "Zones monitored",
+            (data.zones || []).length,
+            "📍",
+            "Zones returned by the backend"
+        );
+    }
+
+    renderEcoTwinZones(data.zones || []);
+}
+
+// Safely update a metric card.
+function setMetric(card, label, value, icon, footnote) {
+    card.querySelector(".metric-label").textContent = label;
+    card.querySelector(".metric-value").textContent = value;
+    card.querySelector(".metric-icon").textContent = icon;
+    card.querySelector(".metric-foot").textContent = footnote;
+}
+
+// Show actual zones and bin fill levels.
+function renderEcoTwinZones(zones) {
+    const twinSection = document.getElementById("page-twin");
+    if (!twinSection) return;
+
+    let panel = document.getElementById("liveZonePanel");
+
+    if (!panel) {
+        panel = document.createElement("article");
+        panel.id = "liveZonePanel";
+        panel.className = "panel";
+        panel.style.marginTop = "16px";
+
+        const heading = document.createElement("div");
+        heading.className = "panel-head";
+
+        const titleWrap = document.createElement("div");
+        const title = document.createElement("h3");
+        title.textContent = "Live bin and zone data";
+
+        const subtitle = document.createElement("p");
+        subtitle.textContent = "Loaded from your FastAPI Digital Twin.";
+
+        titleWrap.append(title, subtitle);
+        heading.append(titleWrap);
+        panel.append(heading);
+
+        const list = document.createElement("div");
+        list.id = "liveZoneList";
+        list.className = "waste-list";
+
+        panel.append(list);
+        twinSection.append(panel);
+    }
+
+    const list = document.getElementById("liveZoneList");
+    list.replaceChildren();
+
+    if (!zones.length) {
+        const empty = document.createElement("p");
+        empty.textContent = "No zones or bins have been added yet.";
+        list.append(empty);
+        return;
+    }
+
+    zones.forEach(zone => {
+        const zoneHeading = document.createElement("h4");
+        zoneHeading.textContent = zone.name || "Unnamed zone";
+        zoneHeading.style.margin = "14px 0 4px";
+        list.append(zoneHeading);
+
+        (zone.bins || []).forEach(bin => {
+            const row = document.createElement("div");
+            row.className = "waste-row";
+
+            const icon = document.createElement("div");
+            icon.className = "waste-icon";
+            icon.textContent = bin.status === "red" ? "🚨" :
+                bin.status === "yellow" ? "⚠️" : "🗑️";
+
+            const info = document.createElement("div");
+
+            const name = document.createElement("div");
+            name.className = "waste-name";
+            name.textContent = bin.name || bin.code || `Bin ${bin.id}`;
+
+            const details = document.createElement("div");
+            details.className = "waste-sub";
+            details.textContent =
+                `Fill: ${bin.fill_level ?? 0}% · Status: ${bin.status || "unknown"}`;
+
+            info.append(name, details);
+
+            const badge = document.createElement("span");
+            badge.className = "status " +
+                (bin.status === "red" ? "bad" :
+                 bin.status === "yellow" ? "warn" : "good");
+            badge.textContent = bin.status || "unknown";
+
+            row.append(icon, info, badge);
+            list.append(row);
+        });
+    });
+}
+
+// Connect the image upload to the real backend classifier.
+async function classifyWasteWithBackend(file) {
+    if (!ecoTwinToken) {
+        showToast("Log in first before classifying an image.");
+        return;
+    }
+
+    const form = new FormData();
+    form.append("image", file);
+
+    const box = document.getElementById("classResult");
+    box.style.display = "block";
+    box.textContent = "Sending image to the backend for classification…";
+
+    try {
+        const result = await apiRequest("/classify", {
+            method: "POST",
+            body: form
+        });
+
+        box.replaceChildren();
+
+        const title = document.createElement("div");
+        title.className = "result-chip";
+        title.textContent = result.label || result.category || "Classification complete";
+
+        const confidence = document.createElement("p");
+        confidence.textContent =
+            `Confidence: ${Math.round((result.confidence || 0) * 100)}%`;
+
+        const note = document.createElement("p");
+        note.textContent =
+            "Classification returned by the backend. Verify the result before sorting.";
+
+        box.append(title, confidence, note);
+
+        showToast("Backend classification completed!");
+
+        console.log("Waste classification result:", result);
+
+    } catch (error) {
+        console.error("Waste classification failed:", error);
+        box.textContent = error.message;
+        showToast("Classification failed. Check the backend response.");
+    }
+}
+
+// Expose functions for testing in the browser Console.
+// Connect the dashboard login form to the backend.
+document.getElementById("ecoTwinLoginForm")?.addEventListener(
+    "submit",
+    async function (event) {
+        event.preventDefault();
+
+        const username = document.getElementById("ecoTwinUsername").value.trim();
+        const password = document.getElementById("ecoTwinPassword").value;
+        const status = document.getElementById("ecoTwinConnectionStatus");
+
+        status.textContent = "Connecting...";
+        status.style.color = "#77847b";
+
+        try {
+            await ecoTwinLogin(username, password);
+
+            status.textContent = "Connected to backend";
+            status.style.color = "#287b52";
+
+            document.getElementById("ecoTwinPassword").value = "";
+        } catch (error) {
+            console.error("EcoTwin login error:", error);
+
+            status.textContent = error.message;
+            status.style.color = "#b85a4e";
+        }
+    }
+);
+window.ecoTwinLogin = ecoTwinLogin;
+window.loadEcoTwinData = loadEcoTwinData;
+window.classifyWasteWithBackend = classifyWasteWithBackend;
+
+// Automatically reload live data if a token is already saved.
+if (ecoTwinToken) {
+    window.addEventListener("load", () => {
+        loadEcoTwinData();
+    });
+}
+
+</script>
+</body>
+</html>
